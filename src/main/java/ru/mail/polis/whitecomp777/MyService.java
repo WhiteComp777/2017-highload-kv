@@ -23,7 +23,7 @@ public class MyService implements KVService {
     private static String extractId(@NotNull final String query){
 
         if(!query.startsWith(PREFIX)){
-            throw new IllegalArgumentException("LOL WHAT STRING");
+            throw new IllegalArgumentException("Wrong query");
         }
         return query.substring(PREFIX.length());
     }
@@ -54,8 +54,14 @@ public class MyService implements KVService {
 
         this.server.createContext("/v0/entity",
                 httpExchange -> {
-                    final String id = this.extractId(httpExchange.getRequestURI().getQuery());
-
+                    String id="";
+                    try {
+                        id = this.extractId(httpExchange.getRequestURI().getQuery());
+                    }
+                    catch (IllegalArgumentException e){
+                        httpExchange.sendResponseHeaders(404, 0);
+                        httpExchange.close();
+                    }
                     if(id.length()==0){
                         httpExchange.sendResponseHeaders(400, 0);
                         httpExchange.close();

@@ -17,9 +17,22 @@ public class MyFileDAO implements MyDAO {
     @NotNull
     private final File dir;
 
+    private static boolean isFilenameValid(String file) throws IOException{
+        File f = new File(file);
+        try {
+            f.getCanonicalPath();
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
 
     @NotNull
-    private File getFile(@NotNull final String key){
+    private File getFile(@NotNull final String key) throws IOException{
+        if(!isFilenameValid(key)){
+            throw new IOException("Wrong chars in filename");
+        }
         return new File(dir, key);
     }
 
@@ -29,9 +42,7 @@ public class MyFileDAO implements MyDAO {
         final File file = getFile(key);
         final byte[] value = new byte[(int) file.length()];
         try(InputStream is = new FileInputStream(file)){
-            if(is.read(value) != file.length()){
-                throw new  IOException("Cant read file i one go");
-            }
+            is.read(value);
         }
         return value;
     }

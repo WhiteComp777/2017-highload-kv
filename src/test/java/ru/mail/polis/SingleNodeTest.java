@@ -49,7 +49,6 @@ public class SingleNodeTest extends TestBase {
     private HttpResponse get(@NotNull final String key) throws IOException {
         return Request.Get(url(key)).execute().returnResponse();
     }
-
     private HttpResponse delete(@NotNull final String key) throws IOException {
         return Request.Delete(url(key)).execute().returnResponse();
     }
