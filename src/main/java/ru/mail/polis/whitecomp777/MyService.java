@@ -4,8 +4,11 @@ import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.KVService;
 import com.sun.net.httpserver.HttpServer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.Set;
 
 /**
  * Created by root on 09/10/2017.
@@ -19,20 +22,26 @@ public class MyService implements KVService {
     @NotNull
     private final MyDAO dao;
 
+    @NotNull private final Set<String> topology;
+
     @NotNull
     private static String extractId(@NotNull final String query){
 
         if(!query.startsWith(PREFIX)){
             throw new IllegalArgumentException("Wrong query");
         }
+        if(query.substring(PREFIX.length()).length()==0){
+            throw new IllegalArgumentException("Does not contain id");
+        }
         return query.substring(PREFIX.length());
     }
 
-    public MyService(int port, @NotNull final MyDAO dao) throws IOException{
+    public MyService(int port, @NotNull final MyDAO dao, @NotNull Set<String> topology) throws IOException{
         this.server = HttpServer.create(
                 new InetSocketAddress(port), 0
         );
         this.dao = dao;
+        this.topology = topology;
 
 
         this.server.createContext("/",
@@ -54,7 +63,7 @@ public class MyService implements KVService {
 
         this.server.createContext("/v0/entity",
                 httpExchange -> {
-                    String id="";
+                    String id = "";
                     try {
                         id = this.extractId(httpExchange.getRequestURI().getQuery());
                     }
@@ -87,13 +96,15 @@ public class MyService implements KVService {
                                 break;
 
                             case "PUT":
-                                final int contentLengh = Integer.valueOf(httpExchange.getRequestHeaders().getFirst("Content-Length"));
-
-                                final byte[] putValue = new byte[contentLengh];
-                                if(contentLengh > 0 && httpExchange.getRequestBody().read(putValue) != contentLengh){
-                                    throw new IOException("Cant read at once");
+                                InputStream in = httpExchange.getRequestBody();
+                                ByteArrayOutputStream _out = new ByteArrayOutputStream();
+                                byte[] buf = new byte[2048];
+                                int read = 0;
+                                while ((read = in.read(buf)) != -1) {
+                                    _out.write(buf, 0, read);
                                 }
-                                dao.upsert(id, putValue);
+
+                                dao.upsert(id, _out.toByteArray());
                                 httpExchange.sendResponseHeaders(201, 0);
                                 break;
 

@@ -3,6 +3,9 @@ package ru.mail.polis.whitecomp777;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
@@ -34,6 +37,22 @@ public class MyFileDAO implements MyDAO {
             throw new IOException("Wrong chars in filename");
         }
         return new File(dir, key);
+    }
+
+    public byte[] readFromFile(String fileName) throws IOException {
+        byte[] buf = new byte[8192];
+        try (InputStream is = Files.newInputStream(Paths.get(fileName))) {
+            int len = is.read(buf);
+            if (len < buf.length) {
+                return Arrays.copyOf(buf, len);
+            }
+            ByteArrayOutputStream os = new ByteArrayOutputStream(16384);
+            while (len != -1) {
+                os.write(buf, 0, len);
+                len = is.read(buf);
+            }
+            return os.toByteArray();
+        }
     }
 
     @NotNull
