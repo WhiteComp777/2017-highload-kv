@@ -15,3 +15,7 @@
 
 # ...even if they are in subdirectories
 !*/
+
+# add loadtest
+!loadtest
+!loadtest/*
