@@ -20,33 +20,26 @@ public class MyFileDAO implements MyDAO {
     @NotNull
     private final File dir;
 
-    private static boolean isFilenameValid(String file) throws IOException{
-        File f = new File(file);
-        try {
-            f.getCanonicalPath();
-            return true;
-        }
-        catch (IOException e) {
-            return false;
-        }
+    private String getLegalFilename(String filename){
+        return filename;
+        //return filename.replaceAll("[:\\\\/*?|<>]", "_");
     }
 
     @NotNull
     private File getFile(@NotNull final String key) throws IOException{
-        if(!isFilenameValid(key)){
-            throw new IOException("Wrong chars in filename");
-        }
-        return new File(dir, key);
+        return new File(dir, getLegalFilename(key));
+
     }
 
-    public byte[] readFromFile(String fileName) throws IOException {
+    @NotNull
+    private byte[] readFromFile(String fileName) throws IOException {
         byte[] buf = new byte[8192];
-        try (InputStream is = Files.newInputStream(Paths.get(fileName))) {
-            int len = is.read(buf);
-            if (len < buf.length) {
-                return Arrays.copyOf(buf, len);
-            }
-            ByteArrayOutputStream os = new ByteArrayOutputStream(16384);
+        int len = 0;
+
+        final File file = getFile(fileName);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try(InputStream is = new FileInputStream(file)){
             while (len != -1) {
                 os.write(buf, 0, len);
                 len = is.read(buf);
@@ -55,15 +48,11 @@ public class MyFileDAO implements MyDAO {
         }
     }
 
+
     @NotNull
     @Override
     public byte[] get(@NotNull final String key) throws NoSuchElementException, IllegalArgumentException, IOException {
-        final File file = getFile(key);
-        final byte[] value = new byte[(int) file.length()];
-        try(InputStream is = new FileInputStream(file)){
-            is.read(value);
-        }
-        return value;
+        return readFromFile(key);
     }
 
     @Override
@@ -75,6 +64,6 @@ public class MyFileDAO implements MyDAO {
 
     @Override
     public void delete(@NotNull final String key) throws IllegalArgumentException, IOException {
-        getFile(key).delete();
+        getFile(getLegalFilename(key)).delete();
     }
 }

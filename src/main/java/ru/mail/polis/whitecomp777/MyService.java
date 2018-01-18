@@ -27,13 +27,11 @@ public class MyService implements KVService {
     @NotNull
     private static String extractId(@NotNull final String query){
 
+        final int PREFIX_LENGTH = PREFIX.length();
         if(!query.startsWith(PREFIX)){
             throw new IllegalArgumentException("Wrong query");
         }
-        if(query.substring(PREFIX.length()).length()==0){
-            throw new IllegalArgumentException("Does not contain id");
-        }
-        return query.substring(PREFIX.length());
+        return query.substring(PREFIX_LENGTH);
     }
 
     public MyService(int port, @NotNull final MyDAO dao, @NotNull Set<String> topology) throws IOException{
@@ -97,14 +95,14 @@ public class MyService implements KVService {
 
                             case "PUT":
                                 InputStream in = httpExchange.getRequestBody();
-                                ByteArrayOutputStream _out = new ByteArrayOutputStream();
+                                ByteArrayOutputStream out = new ByteArrayOutputStream();
                                 byte[] buf = new byte[2048];
                                 int read = 0;
                                 while ((read = in.read(buf)) != -1) {
-                                    _out.write(buf, 0, read);
+                                    out.write(buf, 0, read);
                                 }
 
-                                dao.upsert(id, _out.toByteArray());
+                                dao.upsert(id, out.toByteArray());
                                 httpExchange.sendResponseHeaders(201, 0);
                                 break;
 
