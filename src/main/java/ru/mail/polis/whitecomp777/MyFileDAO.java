@@ -21,8 +21,7 @@ public class MyFileDAO implements MyDAO {
     private final File dir;
 
     private String getLegalFilename(String filename){
-        return filename;
-        //return filename.replaceAll("[:\\\\/*?|<>]", "_");
+        return filename.replaceAll("[:\\\\/*?|<>]", "_");
     }
 
     @NotNull
