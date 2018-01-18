@@ -46,7 +46,42 @@ Transfer/sec:    344.58KB
 
 Интересно, что такие запросы выполняются значительно быстрее запросов без перезаписи, среднее значение задержки упало на 3.5ms. Не уверен, но у меня есть гипотеза, почему так происходит. Возможно, моя ОС фактически запись на диск не производит, а просто сохраняет в кеше изменения на некоторое время, чтобы потом записать все на диск. И из-за большого количества запросов в секунду фактически запись на диск происходит только на последних запросах, а все промежуточные просто быстро презаписываются в кеше.
 ### GET без повторов
+
+
+ushakovilya$ wrk --latency -c4 -d1m -s loadtest/GET_no_repeats.lua  http://localhost:8080/v0/status 
+Running 1m test @ http://localhost:8080/v0/status
+  2 threads and 4 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.70ms    4.08ms 144.63ms   97.22%
+    Req/Sec     1.64k   672.11     2.92k    58.50%
+  Latency Distribution
+     50%    1.03ms
+     75%    1.56ms
+     90%    2.69ms
+     99%   13.29ms
+  195476 requests in 1.00m, 16.41MB read
+Requests/sec:   3254.14
+Transfer/sec:    279.65KB
+
 ### GET с повторами
 
+Сначала запускаю wrk со скриптом before_GET_with_repeats.lua на 3 секунды, чтобы провести запись
+Потом производится GET запрос, считывая всего с первых 30 id
 
-## Вывод
+```
+ushakovilya$ wrk --latency -c4 -d1m -s loadtest/GET_with_repeats.lua  http://localhost:8080/v0/status 
+Running 1m test @ http://localhost:8080/v0/status
+  2 threads and 4 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   394.22us  722.09us  24.45ms   98.68%
+    Req/Sec     5.80k   748.63     9.83k    81.10%
+  Latency Distribution
+     50%  317.00us
+     75%  402.00us
+     90%  494.00us
+     99%    1.80ms
+  693300 requests in 1.00m, 58.18MB read
+Requests/sec:  11535.29
+Transfer/sec:      0.97MB
+```
+Как-то подозрительно быстро
