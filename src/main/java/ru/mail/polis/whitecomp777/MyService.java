@@ -69,7 +69,7 @@ public class MyService implements KVService {
                         httpExchange.sendResponseHeaders(404, 0);
                         httpExchange.close();
                     }
-                    if(id.length()==0){
+                    if(id.length() == 0){
                         httpExchange.sendResponseHeaders(400, 0);
                         httpExchange.close();
                     }

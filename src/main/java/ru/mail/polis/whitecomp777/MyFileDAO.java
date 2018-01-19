@@ -21,7 +21,7 @@ public class MyFileDAO implements MyDAO {
     private final File dir;
 
     private String getLegalFilename(String filename){
-        return filename.replaceAll("[:\\\\/*?|<>]", "_");
+        return  String.valueOf(filename.hashCode()) + filename.replaceAll("[:\\\\/*?|<>]", "");
     }
 
     @NotNull
@@ -30,21 +30,22 @@ public class MyFileDAO implements MyDAO {
 
     }
 
-    @NotNull
-    private byte[] readFromFile(String fileName) throws IOException {
+    public byte[] readFromInputStream(InputStream is) throws IOException{
         byte[] buf = new byte[8192];
         int len = 0;
-
-        final File file = getFile(fileName);
-
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        try(InputStream is = new FileInputStream(file)){
-            while (len != -1) {
-                os.write(buf, 0, len);
-                len = is.read(buf);
-            }
-            return os.toByteArray();
+        while (len != -1) {
+            os.write(buf, 0, len);
+            len = is.read(buf);
         }
+        return os.toByteArray();
+    }
+
+    @NotNull
+    private byte[] readFromFile(String fileName) throws IOException {
+        final File file = getFile(fileName);
+        InputStream is = new FileInputStream(file);
+        return readFromInputStream(is);
     }
 
 
@@ -63,6 +64,6 @@ public class MyFileDAO implements MyDAO {
 
     @Override
     public void delete(@NotNull final String key) throws IllegalArgumentException, IOException {
-        getFile(getLegalFilename(key)).delete();
+        getFile(key).delete();
     }
 }
