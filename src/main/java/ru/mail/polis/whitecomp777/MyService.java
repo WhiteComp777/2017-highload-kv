@@ -22,19 +22,20 @@ public class MyService implements KVService {
     @NotNull
     private final MyDAO dao;
 
-    @NotNull private final Set<String> topology;
+    @NotNull
+    private final Set<String> topology;
 
     @NotNull
-    private static String extractId(@NotNull final String query){
+    private static String extractId(@NotNull final String query) {
 
         final int PREFIX_LENGTH = PREFIX.length();
-        if(!query.startsWith(PREFIX)){
+        if (!query.startsWith(PREFIX)) {
             throw new IllegalArgumentException("Wrong query");
         }
         return query.substring(PREFIX_LENGTH);
     }
 
-    public MyService(int port, @NotNull final MyDAO dao, @NotNull Set<String> topology) throws IOException{
+    public MyService(int port, @NotNull final MyDAO dao, @NotNull Set<String> topology) throws IOException {
         this.server = HttpServer.create(
                 new InetSocketAddress(port), 0
         );
@@ -64,23 +65,20 @@ public class MyService implements KVService {
                     String id = "";
                     try {
                         id = this.extractId(httpExchange.getRequestURI().getQuery());
-                    }
-                    catch (IllegalArgumentException e){
+                    } catch (IllegalArgumentException e) {
                         httpExchange.sendResponseHeaders(404, 0);
                         httpExchange.close();
                     }
-                    if(id.length() == 0){
+                    if (id.length() == 0) {
                         httpExchange.sendResponseHeaders(400, 0);
                         httpExchange.close();
-                    }
-                    else{
-                        switch (httpExchange.getRequestMethod()){
+                    } else {
+                        switch (httpExchange.getRequestMethod()) {
                             case "GET":
                                 final byte[] getValue;
-                                try{
+                                try {
                                     getValue = dao.get(id);
-                                }
-                                catch (IOException e){
+                                } catch (IOException e) {
                                     httpExchange.sendResponseHeaders(404, 0);
                                     break;
                                 }
@@ -94,15 +92,7 @@ public class MyService implements KVService {
                                 break;
 
                             case "PUT":
-                                InputStream in = httpExchange.getRequestBody();
-                                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                                byte[] buf = new byte[2048];
-                                int read = 0;
-                                while ((read = in.read(buf)) != -1) {
-                                    out.write(buf, 0, read);
-                                }
-
-                                dao.upsert(id, out.toByteArray());
+                                dao.upsert(id, MyHelper.inpStreamToByteArr(httpExchange.getRequestBody()));
                                 httpExchange.sendResponseHeaders(201, 0);
                                 break;
 
@@ -114,10 +104,6 @@ public class MyService implements KVService {
                     }
                 }
         );
-
-
-
-
     }
 
     @Override

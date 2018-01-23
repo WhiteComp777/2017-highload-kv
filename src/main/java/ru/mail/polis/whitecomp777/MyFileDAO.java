@@ -20,32 +20,20 @@ public class MyFileDAO implements MyDAO {
     @NotNull
     private final File dir;
 
-    private String getLegalFilename(String filename){
-        return  String.valueOf(filename.hashCode()) + filename.replaceAll("[:\\\\/*?|<>]", "");
+    private String getLegalFilename(String filename) {
+        return filename.replaceAll("[:\\\\/*?|<>]", "") + String.valueOf(filename.hashCode());
     }
 
     @NotNull
-    private File getFile(@NotNull final String key) throws IOException{
+    private File getFile(@NotNull final String key) throws IOException {
         return new File(dir, getLegalFilename(key));
 
     }
 
-    public byte[] readFromInputStream(InputStream is) throws IOException{
-        byte[] buf = new byte[8192];
-        int len = 0;
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        while (len != -1) {
-            os.write(buf, 0, len);
-            len = is.read(buf);
-        }
-        return os.toByteArray();
-    }
 
     @NotNull
     private byte[] readFromFile(String fileName) throws IOException {
-        final File file = getFile(fileName);
-        InputStream is = new FileInputStream(file);
-        return readFromInputStream(is);
+        return MyHelper.inpStreamToByteArr(new FileInputStream(getFile(fileName)));
     }
 
 
@@ -57,7 +45,7 @@ public class MyFileDAO implements MyDAO {
 
     @Override
     public void upsert(@NotNull final String key, @NotNull final byte[] value) throws IllegalArgumentException, IOException {
-        try(OutputStream os = new FileOutputStream(getFile(key))){
+        try (OutputStream os = new FileOutputStream(getFile(key))) {
             os.write(value);
         }
     }
